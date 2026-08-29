@@ -1,6 +1,7 @@
 import React from 'react';
 import { Home, Search, ShoppingCart, User, ScanLine } from 'lucide-react';
 import { ActiveTab } from '../types';
+import { resolveScannerHandler } from '../utils/handlers';
 
 interface BottomNavProps {
   activeTab: ActiveTab;
@@ -19,13 +20,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onOpenQR,
   onOpenScanner,
 }) => {
-  const handleOpenScanner = () => {
-    if (onOpenScanner) {
-      onOpenScanner();
-    } else {
-      onOpenQR();
-    }
-  };
+  const handleOpenScanner = resolveScannerHandler(onOpenScanner, onOpenQR);
 
   return (
     <nav

@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   SAMPLE_PRODUCTS, 
-  BRANCHES, 
   CATEGORIES, 
-  INITIAL_EXCHANGE_RATE 
 } from './data/products';
 import { 
   Product, 
   CartItem, 
   CustomerProfile, 
   Branch, 
-  ActiveTab 
+  ActiveTab,
+  CategoryType
 } from './types';
 
 import { Navbar } from './components/Navbar';
@@ -21,7 +20,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { CustomerModal } from './components/CustomerModal';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { QRModal } from './components/QRModal';
-import { ScannerModal } from './components/ScannerModal';
+import { ScannerModal } from './components/scanner';
 import { BottomNav } from './components/BottomNav';
 import { AccountView } from './components/AccountView';
 import { FeaturedDealsBanner } from './components/FeaturedDealsBanner';
@@ -32,75 +31,28 @@ import {
   Tag, 
   Search
 } from 'lucide-react';
-
-const STORAGE_KEYS = {
-  CART: 'meta_supermarket_cart',
-  PROFILE: 'meta_supermarket_profile',
-  BRANCH: 'meta_supermarket_branch',
-  RATE: 'meta_supermarket_rate',
-};
+import {
+  loadSavedBranch,
+  saveBranch,
+  loadSavedRate,
+  saveRate,
+  loadSavedCart,
+  saveCart,
+  loadSavedProfile,
+  saveProfile,
+} from './utils/storage';
 
 export default function App() {
   // 1. Core State
   const [products] = useState<Product[]>(SAMPLE_PRODUCTS);
-  const [selectedBranch, setSelectedBranch] = useState<Branch>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.BRANCH);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const match = BRANCHES.find((b) => b.id === parsed.id);
-        if (match) return match;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return BRANCHES[0];
-  });
-
-  const [exchangeRate, setExchangeRate] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.RATE);
-      if (saved) {
-        const val = parseFloat(saved);
-        if (!isNaN(val) && val > 0) return val;
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return INITIAL_EXCHANGE_RATE;
-  });
-
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CART);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return [];
-  });
-
-  const [customerProfile, setCustomerProfile] = useState<CustomerProfile>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return {
-      documentType: 'V',
-      documentNumber: '',
-      fullName: '',
-      phone: '',
-      email: '',
-      address: '',
-      preferredBranch: BRANCHES[0].id,
-    };
-  });
+  const [selectedBranch, setSelectedBranch] = useState<Branch>(loadSavedBranch);
+  const [exchangeRate, setExchangeRate] = useState<number>(loadSavedRate);
+  const [cart, setCart] = useState<CartItem[]>(loadSavedCart);
+  const [customerProfile, setCustomerProfile] = useState<CustomerProfile>(loadSavedProfile);
 
   // 2. Navigation and Filter State
   const [activeTab, setActiveTab] = useState<ActiveTab>('inicio');
-  const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('Todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
   const [onlyOffers, setOnlyOffers] = useState<boolean>(false);
@@ -132,39 +84,23 @@ export default function App() {
 
   // Save Cart to LocalStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
-    } catch (e) {
-      console.error(e);
-    }
+    saveCart(cart);
   }, [cart]);
 
   // Save Branch to LocalStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.BRANCH, JSON.stringify(selectedBranch));
-    } catch (e) {
-      console.error(e);
-    }
+    saveBranch(selectedBranch.id);
   }, [selectedBranch]);
 
   // Save Rate to LocalStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.RATE, exchangeRate.toString());
-    } catch (e) {
-      console.error(e);
-    }
+    saveRate(exchangeRate);
   }, [exchangeRate]);
 
   // Save Profile Handler
   const handleSaveProfile = (profile: CustomerProfile) => {
     setCustomerProfile(profile);
-    try {
-      localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
-    } catch (e) {
-      console.error(e);
-    }
+    saveProfile(profile);
   };
 
   // Cart Operations

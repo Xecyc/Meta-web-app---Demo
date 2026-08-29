@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Minus, Check, Info, ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
+import { formatVeCurrency } from '../utils/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -23,10 +24,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [addedFeedback, setAddedFeedback] = useState(false);
   const [imgError, setImgError] = useState(false);
 
+  const isOutOfStock = product.inStock === false || product.stockCount <= 0;
   const priceBsd = product.priceUSD * exchangeRate;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isOutOfStock) return;
     onAddToCart(product, localQty);
     setAddedFeedback(true);
     setTimeout(() => setAddedFeedback(false), 1000);
@@ -34,6 +37,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isOutOfStock) return;
     if (cartQuantity > 0) {
       onUpdateQuantity(product.id, cartQuantity + 1);
     } else {
@@ -56,8 +60,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onClick={() => onOpenDetails(product)}
       className="group relative flex flex-col justify-between bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-lg hover:border-slate-300 transition-all duration-200 cursor-pointer overflow-hidden p-3 sm:p-3.5"
     >
-      {/* Discount Badge: Consistently aligned top-left */}
-      {product.discountPercent && product.discountPercent > 0 ? (
+      {/* Badge: Out of Stock takes priority over Discount Badge */}
+      {isOutOfStock ? (
+        <div className="absolute top-2 left-2 z-10 pointer-events-none">
+          <span className="bg-slate-800 text-white text-[9px] sm:text-xs font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow-xs uppercase tracking-tight">
+            Agotado
+          </span>
+        </div>
+      ) : product.discountPercent && product.discountPercent > 0 ? (
         <div className="absolute top-2 left-2 z-10 pointer-events-none">
           <span className="bg-red-600 text-white text-[9px] sm:text-xs font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow-xs uppercase tracking-tight">
             -{product.discountPercent}%
@@ -94,7 +104,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             onError={() => setImgError(true)}
             loading="lazy"
             referrerPolicy="no-referrer"
-            className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300 ${
+              isOutOfStock ? 'opacity-50 grayscale' : ''
+            }`}
           />
         )}
       </div>
@@ -126,15 +138,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Row 2: Converted VES price tag in its own dedicated pill badge */}
           <div className="flex items-center">
             <span className="inline-flex items-center text-[10px] sm:text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-              {priceBsd.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bsd
+              {formatVeCurrency(priceBsd)} Bsd
             </span>
           </div>
         </div>
       </div>
 
-      {/* Action Controls: Full-width red "+ Añadir" CTA button anchored cleanly */}
+      {/* Action Controls: Full-width red "+ Añadir" CTA button anchored cleanly or Agotado disabled state */}
       <div className="pt-1 mt-auto w-full">
-        {cartQuantity > 0 ? (
+        {isOutOfStock ? (
+          <button
+            type="button"
+            disabled
+            className="w-full py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-400 bg-slate-100 border border-slate-200 cursor-not-allowed flex items-center justify-center gap-1.5 shadow-none select-none"
+          >
+            <span>Agotado</span>
+          </button>
+        ) : cartQuantity > 0 ? (
           <div className="flex items-center justify-between bg-red-50 rounded-xl p-1 border border-red-200 w-full shadow-2xs">
             <button
               id={`decrement-btn-${product.id}`}

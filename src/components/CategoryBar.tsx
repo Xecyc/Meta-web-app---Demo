@@ -1,21 +1,15 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { 
-  ShoppingBag, 
-  UtensilsCrossed, 
-  Coffee, 
-  Sparkles, 
-  ShieldCheck, 
-  Cookie, 
-  Apple, 
-  LayoutGrid,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
+import { CategoryType } from '../types';
+import { getCategoryIcon } from '../utils/categoryIcons';
 
 interface CategoryBarProps {
-  selectedCategory: string;
-  onSelectCategory: (cat: string) => void;
+  selectedCategory: CategoryType;
+  onSelectCategory: (cat: CategoryType) => void;
   productCounts: Record<string, number>;
 }
 
@@ -56,29 +50,6 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({
     const scrollAmount = direction === 'left' ? -220 : 220;
     el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     setTimeout(checkScrollability, 300);
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'Todos':
-        return <LayoutGrid className="w-3.5 h-3.5" />;
-      case 'Víveres':
-        return <UtensilsCrossed className="w-3.5 h-3.5" />;
-      case 'Bebidas':
-        return <Coffee className="w-3.5 h-3.5" />;
-      case 'Charcutería':
-        return <ShoppingBag className="w-3.5 h-3.5" />;
-      case 'Limpieza':
-        return <Sparkles className="w-3.5 h-3.5" />;
-      case 'Farmacia':
-        return <ShieldCheck className="w-3.5 h-3.5" />;
-      case 'Snacks':
-        return <Cookie className="w-3.5 h-3.5" />;
-      case 'Frutas y Verduras':
-        return <Apple className="w-3.5 h-3.5" />;
-      default:
-        return <ShoppingBag className="w-3.5 h-3.5" />;
-    }
   };
 
   return (

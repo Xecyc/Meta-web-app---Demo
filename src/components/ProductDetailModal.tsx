@@ -3,12 +3,13 @@ import {
   X, 
   ShoppingCart, 
   Plus, 
-  Minus,
-  Share2,
-  Sparkles,
-  Barcode
+  Minus, 
+  Share2, 
+  Sparkles, 
+  Barcode 
 } from 'lucide-react';
 import { Product } from '../types';
+import { formatVeCurrency } from '../utils/currency';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -20,32 +21,25 @@ interface ProductDetailModalProps {
   onUpdateQuantity: (productId: string, newQuantity: number) => void;
 }
 
-// Format Venezuelan currency: periods for thousands, comma for decimals
-const formatVeCurrency = (num: number): string => {
-  if (isNaN(num) || !isFinite(num)) return '0,00';
-  const fixed = num.toFixed(2);
-  const [intPart, decPart] = fixed.split('.');
-  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${formattedInt},${decPart || '00'}`;
-};
-
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   product,
   isOpen,
   onClose,
   exchangeRate,
+  cartQuantity,
   onAddToCart,
+  onUpdateQuantity,
 }) => {
   const [qty, setQty] = useState<number>(1);
   const [copied, setCopied] = useState<boolean>(false);
 
-  // Reset quantity to 1 when modal opens or product changes
+  // Initialize quantity to cartQuantity if already in cart, else 1
   useEffect(() => {
     if (isOpen) {
-      setQty(1);
+      setQty(cartQuantity > 0 ? cartQuantity : 1);
       setCopied(false);
     }
-  }, [isOpen, product]);
+  }, [isOpen, product, cartQuantity]);
 
   // Handle ESC key to close
   useEffect(() => {
@@ -60,10 +54,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   if (!isOpen || !product) return null;
 
+  const isOutOfStock = product.inStock === false || product.stockCount <= 0;
   const priceBsd = product.priceUSD * exchangeRate;
 
   const handleAdd = () => {
-    onAddToCart(product, qty);
+    if (isOutOfStock) return;
+    if (cartQuantity > 0) {
+      onUpdateQuantity(product.id, qty);
+    } else {
+      onAddToCart(product, qty);
+    }
     onClose();
   };
 
@@ -132,9 +132,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         {/* Upper Content Row: Horizontal Flex / Split View */}
         <div className="p-3.5 sm:p-4 flex flex-row items-center gap-3 sm:gap-4 bg-white">
-          {/* Image Frame (Left ~40%): Square thumbnail with discount badge */}
+          {/* Image Frame (Left ~40%): Square thumbnail with discount badge / out of stock */}
           <div className="relative shrink-0 w-28 h-28 sm:w-32 sm:h-32 aspect-square bg-slate-50 rounded-xl p-2 border border-slate-200/90 flex items-center justify-center">
-            {product.discountPercent && product.discountPercent > 0 ? (
+            {isOutOfStock ? (
+              <span className="absolute top-1 left-1 bg-slate-800 text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-xs">
+                Agotado
+              </span>
+            ) : product.discountPercent && product.discountPercent > 0 ? (
               <span className="absolute top-1 left-1 bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-xs">
                 -{product.discountPercent}%
               </span>
@@ -150,7 +154,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               alt={product.name}
               referrerPolicy="no-referrer"
               loading="lazy"
-              className="max-h-full max-w-full object-contain"
+              className={`max-h-full max-w-full object-contain ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
             />
           </div>
 
@@ -189,6 +193,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     ${product.originalPriceUSD.toFixed(2)}
                   </span>
                 )}
+                {isOutOfStock && (
+                  <span className="text-[11px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">
+                    Agotado
+                  </span>
+                )}
               </div>
               <div className="text-xs font-extrabold text-red-600 mt-1">
                 Bs. {formatVeCurrency(priceBsd)} Bsd
@@ -200,12 +209,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         {/* Bottom Sticky Action Bar: Stepper + Primary Add CTA */}
         <div className="px-3.5 sm:px-4 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center gap-2.5">
           {/* Quantity Stepper */}
-          <div className="flex items-center bg-white rounded-xl border border-slate-200 p-0.5 shrink-0 shadow-2xs">
+          <div className={`flex items-center bg-white rounded-xl border border-slate-200 p-0.5 shrink-0 shadow-2xs ${isOutOfStock ? 'opacity-50 pointer-events-none' : ''}`}>
             <button
               type="button"
               id="decrease-qty-btn"
               onClick={() => setQty((prev) => Math.max(1, prev - 1))}
-              disabled={qty <= 1}
+              disabled={qty <= 1 || isOutOfStock}
               className="w-8 h-8 flex items-center justify-center text-slate-700 hover:text-red-600 disabled:text-slate-300 font-bold bg-slate-50 hover:bg-white rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed"
               aria-label="Disminuir cantidad"
             >
@@ -218,7 +227,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               type="button"
               id="increase-qty-btn"
               onClick={() => setQty((prev) => prev + 1)}
-              className="w-8 h-8 flex items-center justify-center text-slate-700 hover:text-emerald-600 font-bold bg-slate-50 hover:bg-white rounded-lg transition-colors cursor-pointer"
+              disabled={isOutOfStock}
+              className="w-8 h-8 flex items-center justify-center text-slate-700 hover:text-emerald-600 disabled:text-slate-300 font-bold bg-slate-50 hover:bg-white rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed"
               aria-label="Aumentar cantidad"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -230,13 +240,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             type="button"
             id="modal-add-to-cart-btn"
             onClick={handleAdd}
-            className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+            disabled={isOutOfStock}
+            className={`flex-1 py-2.5 px-4 font-bold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              isOutOfStock
+                ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                : 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white active:scale-[0.98]'
+            }`}
           >
             <ShoppingCart className="w-4 h-4" />
-            <span>Añadir ${(product.priceUSD * qty).toFixed(2)} USD</span>
+            <span>
+              {isOutOfStock
+                ? 'Producto Agotado'
+                : cartQuantity > 0
+                ? `Actualizar ($${(product.priceUSD * qty).toFixed(2)} USD)`
+                : `Añadir $${(product.priceUSD * qty).toFixed(2)} USD`}
+            </span>
           </button>
         </div>
       </div>
     </div>
   );
 };
+

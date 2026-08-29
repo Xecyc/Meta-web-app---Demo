@@ -8,8 +8,9 @@ import {
   ScanLine
 } from 'lucide-react';
 import { MetaLogo } from './MetaLogo';
-import { Branch } from '../types';
+import { Branch, CategoryType } from '../types';
 import { BRANCHES } from '../data/products';
+import { resolveScannerHandler } from '../utils/handlers';
 
 interface NavbarProps {
   selectedBranch: Branch;
@@ -25,8 +26,8 @@ interface NavbarProps {
   onLogoClick?: () => void;
   activeTab?: string;
   onTabChange?: (tab: any) => void;
-  selectedCategory?: string;
-  onSelectCategory?: (category: string) => void;
+  selectedCategory?: CategoryType;
+  onSelectCategory?: (category: CategoryType) => void;
   onlyOffers?: boolean;
   onToggleOffers?: () => void;
   onOpenProfile?: () => void;
@@ -49,13 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showBranchDropdown, setShowBranchDropdown] = useState(false);
   const branchDropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleOpenScanner = () => {
-    if (onOpenScanner) {
-      onOpenScanner();
-    } else if (onOpenQR) {
-      onOpenQR();
-    }
-  };
+  const handleOpenScanner = resolveScannerHandler(onOpenScanner, onOpenQR);
 
   // Close dropdowns on click outside
   useEffect(() => {

@@ -9,6 +9,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { CartItem, CustomerProfile, Branch } from '../types';
+import { formatVeCurrency } from '../utils/currency';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -22,15 +23,6 @@ interface CartDrawerProps {
   selectedBranch: Branch;
   onOpenCustomerModal?: () => void;
 }
-
-// Format Venezuelan currency: periods for thousands, commas for decimals
-const formatVeCurrency = (num: number): string => {
-  if (isNaN(num) || !isFinite(num)) return '0,00';
-  const fixed = num.toFixed(2);
-  const [intPart, decPart] = fixed.split('.');
-  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${formattedInt},${decPart || '00'}`;
-};
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
   isOpen,

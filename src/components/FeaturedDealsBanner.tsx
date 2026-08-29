@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Sparkles, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
+import { formatVeCurrency } from '../utils/currency';
 
 interface FeaturedDealsBannerProps {
   featuredProducts: Product[];
@@ -183,7 +184,7 @@ export const FeaturedDealsBanner: React.FC<FeaturedDealsBannerProps> = ({
                 )}
               </div>
               <span className="text-[10px] sm:text-xs lg:text-sm font-bold text-white bg-white/15 border border-white/20 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg">
-                {dealPriceBsd.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bsd
+                {formatVeCurrency(dealPriceBsd)} Bsd
               </span>
               <span className="hidden lg:inline text-[11px] text-slate-400 font-medium">
                 ({currentDeal.unit})
@@ -195,11 +196,22 @@ export const FeaturedDealsBanner: React.FC<FeaturedDealsBannerProps> = ({
               <button
                 id="btn-add-featured-deal"
                 type="button"
-                onClick={() => onAddToCart(currentDeal, 1)}
-                className="px-3 sm:px-5 py-1.5 sm:py-2 bg-[#dc2626] hover:bg-red-700 active:bg-red-800 text-white text-[11px] sm:text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-1.5 sm:gap-2 active:scale-95 whitespace-nowrap cursor-pointer"
+                onClick={() => {
+                  if (currentDeal.inStock !== false && currentDeal.stockCount > 0) {
+                    onAddToCart(currentDeal, 1);
+                  }
+                }}
+                disabled={currentDeal.inStock === false || currentDeal.stockCount <= 0}
+                className={`px-3 sm:px-5 py-1.5 sm:py-2 text-white text-[11px] sm:text-xs font-black rounded-xl shadow-md transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${
+                  currentDeal.inStock === false || currentDeal.stockCount <= 0
+                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed shadow-none'
+                    : 'bg-[#dc2626] hover:bg-red-700 active:bg-red-800 active:scale-95 cursor-pointer'
+                }`}
               >
                 <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                <span>Añadir</span>
+                <span>
+                  {currentDeal.inStock === false || currentDeal.stockCount <= 0 ? 'Agotado' : 'Añadir'}
+                </span>
               </button>
               <button
                 type="button"

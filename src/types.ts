@@ -1,7 +1,10 @@
+import type { CategoryType } from './data/products';
+export type { CategoryType };
+
 export interface Product {
   id: string;
   name: string;
-  category: string;
+  category: CategoryType;
   priceUSD: number;
   image: string;
   unit: string;
@@ -46,12 +49,3 @@ export interface Branch {
 
 export type ActiveTab = 'inicio' | 'productos' | 'carrito' | 'cuenta';
 
-export type CategoryType = 
-  | 'Todos'
-  | 'Víveres'
-  | 'Bebidas'
-  | 'Charcutería'
-  | 'Limpieza'
-  | 'Farmacia'
-  | 'Snacks'
-  | 'Frutas y Verduras';

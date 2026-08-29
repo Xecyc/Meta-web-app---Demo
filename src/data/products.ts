@@ -1,3 +1,4 @@
+// TODO: @google/genai and GEMINI_API_KEY are currently unused in this codebase — confirm whether a Gemini-powered feature (e.g. smart product search, AI OCR assist) is planned before removing this dependency in a future cleanup pass.
 import { Branch, Product } from '../types';
 
 export const BRANCHES: Branch[] = [
@@ -49,6 +50,8 @@ export const CATEGORIES = [
   'Snacks',
   'Frutas y Verduras',
 ] as const;
+
+export type CategoryType = (typeof CATEGORIES)[number];
 
 export const INITIAL_EXCHANGE_RATE = 791.68; // Bsd por 1 USD
 
