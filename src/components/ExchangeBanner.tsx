@@ -1,19 +1,24 @@
 import React from 'react';
-import { Calculator, ChevronRight } from 'lucide-react';
+import { Calculator, ChevronRight, RefreshCw, Radio } from 'lucide-react';
+import { formatVeCurrency } from '../utils/currency';
 
 interface ExchangeBannerProps {
   exchangeRate: number;
   onOpenCalculator?: () => void;
+  isRefreshing?: boolean;
+  onRefresh?: () => void;
+  lastUpdatedApi?: string | null;
+  isAutoUpdated?: boolean;
 }
 
 export const ExchangeBanner: React.FC<ExchangeBannerProps> = ({
   exchangeRate,
   onOpenCalculator,
+  isRefreshing = false,
+  onRefresh,
+  lastUpdatedApi,
 }) => {
-  const formattedRate = exchangeRate.toLocaleString('es-VE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const formattedRate = formatVeCurrency(exchangeRate);
 
   return (
     <div
@@ -32,15 +37,19 @@ export const ExchangeBanner: React.FC<ExchangeBannerProps> = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-3 py-1.5 flex flex-row items-center justify-between gap-2 text-xs">
-        {/* Left Side: Live status dot, label & rate on a single row */}
-        <div className="flex flex-row items-center gap-1.5 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        {/* Left Side: Live status dot, DolarAPI badge & rate */}
+        <div className="flex flex-row items-center gap-1.5 sm:gap-2 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
           <span className="flex h-2 w-2 relative shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isRefreshing ? 'bg-amber-400' : 'bg-emerald-400'} opacity-75`}></span>
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${isRefreshing ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
           </span>
 
-          <span className="text-xs sm:text-sm font-medium text-slate-300">
-            Tasa BCV:
+          <span className="text-xs sm:text-sm font-medium text-slate-300 flex items-center gap-1">
+            <span>Tasa BCV:</span>
+            <span className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-1.5 py-0.2 rounded">
+              <Radio className="w-2.5 h-2.5 animate-pulse" />
+              DolarAPI
+            </span>
           </span>
 
           <span className="text-xs sm:text-sm font-bold text-amber-400 tracking-tight">
@@ -48,8 +57,24 @@ export const ExchangeBanner: React.FC<ExchangeBannerProps> = ({
           </span>
         </div>
 
-        {/* Right Side: Anchor compact pill calculator CTA button */}
-        <div className="flex items-center shrink-0">
+        {/* Right Side: Quick Refresh Button + Calculator CTA button */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onRefresh && (
+            <button
+              type="button"
+              id="refresh-bcv-rate-banner-btn"
+              title="Actualizar tasa desde DolarAPI"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRefresh();
+              }}
+              disabled={isRefreshing}
+              className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-amber-400' : ''}`} />
+            </button>
+          )}
+
           <button
             type="button"
             id="open-bcv-calculator-btn"

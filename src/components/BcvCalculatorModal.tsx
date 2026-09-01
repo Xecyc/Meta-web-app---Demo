@@ -5,9 +5,13 @@ import {
   ArrowUpDown, 
   Calculator, 
   DollarSign, 
-  Coins 
+  Coins,
+  RefreshCw,
+  Clock,
+  Radio
 } from 'lucide-react';
 import { formatVeCurrency, parseVeCurrency, formatLiveInput } from '../utils/currency';
+import { formatBcvDate } from '../services/dolarApi';
 
 export { formatVeCurrency, parseVeCurrency, formatLiveInput };
 
@@ -15,6 +19,10 @@ interface BcvCalculatorModalProps {
   isOpen: boolean;
   onClose: () => void;
   exchangeRate: number;
+  isRefreshing?: boolean;
+  onRefreshRate?: () => void;
+  lastUpdatedApi?: string | null;
+  rateSource?: string;
 }
 
 const PRESET_AMOUNTS = [5, 10, 20, 50, 100];
@@ -23,6 +31,10 @@ export const BcvCalculatorModal: React.FC<BcvCalculatorModalProps> = ({
   isOpen,
   onClose,
   exchangeRate,
+  isRefreshing = false,
+  onRefreshRate,
+  lastUpdatedApi,
+  rateSource = 'DolarAPI Venezuela (BCV Oficial)',
 }) => {
   // Mode: 'USD_TO_BSD' means top is USD, bottom is Bsd. 'BSD_TO_USD' means top is Bsd, bottom is USD.
   const [mode, setMode] = useState<'USD_TO_BSD' | 'BSD_TO_USD'>('USD_TO_BSD');
@@ -185,35 +197,61 @@ export const BcvCalculatorModal: React.FC<BcvCalculatorModalProps> = ({
 
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-[#0a192f] text-white flex items-center justify-center shadow-xs shrink-0">
-                  <Calculator className="w-4 h-4 text-amber-400" />
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-[#0a192f] text-white flex items-center justify-center shadow-xs shrink-0">
+                  <Calculator className="w-4.5 h-4.5 text-amber-400" />
                 </div>
-                <div>
-                  <h2
-                    id="bcv-calculator-title"
-                    className="text-base sm:text-lg font-black text-slate-900 leading-tight"
-                  >
-                    Calculadora de Cambio BCV
-                  </h2>
-                  <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2
+                      id="bcv-calculator-title"
+                      className="text-base sm:text-lg font-black text-slate-900 leading-tight"
+                    >
+                      Calculadora BCV
+                    </h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300/80 px-1.5 py-0.5 rounded-full shrink-0">
+                      <Radio className="w-2.5 h-2.5 text-emerald-600 animate-pulse" />
+                      DolarAPI
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       Tasa: {formattedRate} Bsd / USD
                     </span>
+                    {lastUpdatedApi && (
+                      <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <Clock className="w-2.5 h-2.5 text-slate-400" />
+                        {formatBcvDate(lastUpdatedApi)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Close Icon Button */}
-              <button
-                id="close-bcv-calculator-btn"
-                onClick={onClose}
-                aria-label="Cerrar calculadora"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              {/* Action Buttons: Refresh & Close */}
+              <div className="flex items-center gap-1 shrink-0">
+                {onRefreshRate && (
+                  <button
+                    type="button"
+                    id="refresh-bcv-rate-modal-btn"
+                    onClick={onRefreshRate}
+                    disabled={isRefreshing}
+                    title="Actualizar tasa desde DolarAPI"
+                    className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-amber-500' : ''}`} />
+                  </button>
+                )}
+                <button
+                  id="close-bcv-calculator-btn"
+                  onClick={onClose}
+                  aria-label="Cerrar calculadora"
+                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Dual Input Converter */}

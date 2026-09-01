@@ -40,13 +40,24 @@ import {
   saveCart,
   loadSavedProfile,
   saveProfile,
+  clearProfile,
+  loadSavedRateMeta,
+  saveRateMeta,
+  loadSavedAutoUpdate,
+  saveAutoUpdate,
 } from './utils/storage';
+import { fetchBcvRateFromDolarApi } from './services/dolarApi';
+import { formatVeCurrency } from './utils/currency';
 
 export default function App() {
   // 1. Core State
   const [products] = useState<Product[]>(SAMPLE_PRODUCTS);
   const [selectedBranch, setSelectedBranch] = useState<Branch>(loadSavedBranch);
   const [exchangeRate, setExchangeRate] = useState<number>(loadSavedRate);
+  const [rateMeta, setRateMeta] = useState(loadSavedRateMeta);
+  const [isAutoUpdated, setIsAutoUpdated] = useState<boolean>(loadSavedAutoUpdate);
+  const [isRefreshingRate, setIsRefreshingRate] = useState<boolean>(false);
+  const [rateToast, setRateToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [cart, setCart] = useState<CartItem[]>(loadSavedCart);
   const [customerProfile, setCustomerProfile] = useState<CustomerProfile>(loadSavedProfile);
 
@@ -97,10 +108,135 @@ export default function App() {
     saveRate(exchangeRate);
   }, [exchangeRate]);
 
+  // Refresh Exchange Rate using DolarAPI Venezuela
+  const handleRefreshRate = async (showFeedback = true) => {
+    setIsRefreshingRate(true);
+    try {
+      const data = await fetchBcvRateFromDolarApi();
+      setExchangeRate(data.rate);
+      saveRate(data.rate);
+
+      const newMeta = {
+        source: data.source,
+        lastUpdatedApi: data.lastUpdatedApi,
+        lastFetchedLocal: data.lastFetchedLocal,
+        isAutoUpdated: true,
+      };
+      setRateMeta(newMeta);
+      saveRateMeta(newMeta);
+
+      if (showFeedback) {
+        setRateToast({
+          message: `Tasa BCV actualizada: $1 USD = ${formatVeCurrency(data.rate)} Bsd (DolarAPI)`,
+          type: 'success',
+        });
+        setTimeout(() => setRateToast(null), 3500);
+      }
+    } catch (err) {
+      console.error('Error al consultar DolarAPI Venezuela:', err);
+      if (showFeedback) {
+        setRateToast({
+          message: 'No se pudo sincronizar con DolarAPI. Se mantendrá la tasa actual.',
+          type: 'error',
+        });
+        setTimeout(() => setRateToast(null), 3500);
+      }
+    } finally {
+      setIsRefreshingRate(false);
+    }
+  };
+
+  // Manual rate override handler (for custom testing or offline)
+  const handleManualUpdateRate = (newRate: number) => {
+    setExchangeRate(newRate);
+    saveRate(newRate);
+    const updatedMeta = {
+      source: 'Ajuste Manual / Personalizado',
+      lastUpdatedApi: new Date().toISOString(),
+      lastFetchedLocal: new Date().toISOString(),
+      isAutoUpdated: false,
+    };
+    setRateMeta(updatedMeta);
+    saveRateMeta(updatedMeta);
+    setRateToast({
+      message: `Tasa actualizada a $1 USD = ${formatVeCurrency(newRate)} Bsd`,
+      type: 'info',
+    });
+    setTimeout(() => setRateToast(null), 3500);
+  };
+
+  // Toggle Auto-sync setting
+  const handleToggleAutoUpdate = (enabled: boolean) => {
+    setIsAutoUpdated(enabled);
+    saveAutoUpdate(enabled);
+    if (enabled) {
+      handleRefreshRate(true);
+    } else {
+      setRateToast({
+        message: 'Actualización automática pausada.',
+        type: 'info',
+      });
+      setTimeout(() => setRateToast(null), 3000);
+    }
+  };
+
+  // Auto-Update Effect on Mount and Periodic Background Polling
+  useEffect(() => {
+    // Initial fetch on mount
+    if (isAutoUpdated) {
+      handleRefreshRate(false);
+    }
+
+    // Periodic polling every 5 minutes (300,000 ms)
+    const intervalId = setInterval(() => {
+      if (isAutoUpdated && !document.hidden) {
+        handleRefreshRate(false);
+      }
+    }, 300000);
+
+    // Refresh when user returns to tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isAutoUpdated) {
+        handleRefreshRate(false);
+      }
+    };
+
+    // Refresh when internet connection is restored
+    const handleOnline = () => {
+      if (isAutoUpdated) {
+        handleRefreshRate(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [isAutoUpdated]);
+
   // Save Profile Handler
   const handleSaveProfile = (profile: CustomerProfile) => {
     setCustomerProfile(profile);
     saveProfile(profile);
+  };
+
+  // Reset/Clear Registered Account (For Demo purposes)
+  const handleResetProfile = () => {
+    const emptyProfile: CustomerProfile = {
+      documentType: 'V',
+      documentNumber: '',
+      fullName: '',
+      phone: '',
+      email: '',
+      address: '',
+      preferredBranch: selectedBranch.id,
+    };
+    setCustomerProfile(emptyProfile);
+    clearProfile();
   };
 
   // Cart Operations
@@ -261,6 +397,10 @@ export default function App() {
         <ExchangeBanner
           exchangeRate={exchangeRate}
           onOpenCalculator={() => setIsCalculatorOpen(true)}
+          isRefreshing={isRefreshingRate}
+          onRefresh={() => handleRefreshRate(true)}
+          lastUpdatedApi={rateMeta.lastUpdatedApi}
+          isAutoUpdated={isAutoUpdated}
         />
       )}
 
@@ -285,9 +425,17 @@ export default function App() {
           <AccountView
             profile={customerProfile}
             onEditProfile={() => setIsCustomerModalOpen(true)}
+            onResetProfile={handleResetProfile}
             selectedBranch={selectedBranch}
             onSelectBranch={setSelectedBranch}
             exchangeRate={exchangeRate}
+            onRefreshRate={() => handleRefreshRate(true)}
+            isRefreshingRate={isRefreshingRate}
+            lastUpdatedApi={rateMeta.lastUpdatedApi}
+            lastFetchedLocal={rateMeta.lastFetchedLocal}
+            isAutoUpdated={isAutoUpdated}
+            onToggleAutoUpdate={handleToggleAutoUpdate}
+            onManualUpdateRate={handleManualUpdateRate}
           />
         ) : (
           <>
@@ -483,7 +631,40 @@ export default function App() {
         isOpen={isCalculatorOpen}
         onClose={() => setIsCalculatorOpen(false)}
         exchangeRate={exchangeRate}
+        isRefreshing={isRefreshingRate}
+        onRefreshRate={() => handleRefreshRate(true)}
+        lastUpdatedApi={rateMeta.lastUpdatedApi}
+        rateSource={rateMeta.source}
       />
+
+      {/* Floating Rate Sync Notification Toast */}
+      {rateToast && (
+        <div
+          id="rate-sync-toast-notification"
+          role="status"
+          className="fixed bottom-16 sm:bottom-6 right-4 left-4 sm:left-auto sm:max-w-md z-50 bg-[#0a192f] text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700/80 flex items-center justify-between gap-3 text-xs animate-fadeIn"
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${
+                rateToast.type === 'success'
+                  ? 'bg-emerald-400 animate-ping'
+                  : rateToast.type === 'error'
+                  ? 'bg-red-400'
+                  : 'bg-amber-400'
+              }`}
+            />
+            <span className="font-medium text-slate-200">{rateToast.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRateToast(null)}
+            className="text-slate-400 hover:text-white text-xs font-bold cursor-pointer shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }

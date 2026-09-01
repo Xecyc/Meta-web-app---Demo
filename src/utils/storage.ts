@@ -4,9 +4,18 @@ import { BRANCHES, INITIAL_EXCHANGE_RATE } from '../data/products';
 export const STORAGE_KEYS = {
   BRANCH: 'meta_supermarket_branch',
   RATE: 'meta_supermarket_rate',
+  RATE_META: 'meta_supermarket_rate_meta',
+  RATE_AUTO_UPDATE: 'meta_supermarket_rate_auto_update',
   CART: 'meta_supermarket_cart',
   PROFILE: 'meta_supermarket_profile',
 } as const;
+
+export interface StoredRateMeta {
+  source: string;
+  lastUpdatedApi: string | null;
+  lastFetchedLocal: string | null;
+  isAutoUpdated: boolean;
+}
 
 export const loadSavedBranch = (): Branch => {
   try {
@@ -47,6 +56,49 @@ export const saveRate = (rate: number): void => {
     localStorage.setItem(STORAGE_KEYS.RATE, rate.toString());
   } catch (e) {
     console.error('Failed to save rate to storage:', e);
+  }
+};
+
+export const loadSavedRateMeta = (): StoredRateMeta => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.RATE_META);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {
+    console.error('Failed to load rate meta from storage:', e);
+  }
+  return {
+    source: 'DolarAPI Venezuela (BCV Oficial)',
+    lastUpdatedApi: null,
+    lastFetchedLocal: null,
+    isAutoUpdated: true,
+  };
+};
+
+export const saveRateMeta = (meta: StoredRateMeta): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.RATE_META, JSON.stringify(meta));
+  } catch (e) {
+    console.error('Failed to save rate meta to storage:', e);
+  }
+};
+
+export const loadSavedAutoUpdate = (): boolean => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.RATE_AUTO_UPDATE);
+    if (saved !== null) {
+      return saved === 'true';
+    }
+  } catch (e) {
+    console.error('Failed to load auto update preference:', e);
+  }
+  return true;
+};
+
+export const saveAutoUpdate = (enabled: boolean): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.RATE_AUTO_UPDATE, enabled ? 'true' : 'false');
+  } catch (e) {
+    console.error('Failed to save auto update preference:', e);
   }
 };
 
@@ -91,5 +143,13 @@ export const saveProfile = (profile: CustomerProfile): void => {
     localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
   } catch (e) {
     console.error('Failed to save profile to storage:', e);
+  }
+};
+
+export const clearProfile = (): void => {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.PROFILE);
+  } catch (e) {
+    console.error('Failed to clear profile from storage:', e);
   }
 };
