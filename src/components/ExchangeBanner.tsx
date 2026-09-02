@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calculator, ChevronRight, RefreshCw, Radio } from 'lucide-react';
+import { Calculator, ChevronRight, Radio } from 'lucide-react';
 import { formatVeCurrency } from '../utils/currency';
 
 interface ExchangeBannerProps {
@@ -57,24 +57,8 @@ export const ExchangeBanner: React.FC<ExchangeBannerProps> = ({
           </span>
         </div>
 
-        {/* Right Side: Quick Refresh Button + Calculator CTA button */}
+        {/* Right Side: Calculator CTA button */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {onRefresh && (
-            <button
-              type="button"
-              id="refresh-bcv-rate-banner-btn"
-              title="Actualizar tasa desde DolarAPI"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRefresh();
-              }}
-              disabled={isRefreshing}
-              className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-amber-400' : ''}`} />
-            </button>
-          )}
-
           <button
             type="button"
             id="open-bcv-calculator-btn"
