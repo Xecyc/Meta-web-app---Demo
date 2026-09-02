@@ -5,8 +5,11 @@
     <title>Supertiendas Meta</title>
     <script>
       // Single Page Apps for GitHub Pages
-      // Redirects 404 paths back to the SPA entry point with query parameters
-      var pathSegmentsToKeep = 0;
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      // Auto-detect segments to keep: 1 for <user>.github.io/<repo-name>, 0 for custom domains
+      var isGithubPages = window.location.hostname.endsWith('github.io');
+      var pathSegmentsToKeep = isGithubPages ? 1 : 0;
       var l = window.location;
       l.replace(
         l.protocol +
