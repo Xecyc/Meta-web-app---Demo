@@ -43,7 +43,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const handleSendWhatsApp = () => {
     if (items.length === 0) return;
 
-    const orderNumber = `META-${Math.floor(100000 + Math.random() * 900000)}`;
+    const orderNumber = `ST-${Math.floor(100000 + Math.random() * 900000)}`;
     const dateStr = new Date().toLocaleDateString('es-VE', {
       year: 'numeric',
       month: 'short',
@@ -52,7 +52,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       minute: '2-digit',
     });
 
-    let message = `🛒 *PEDIDO SUPERTIENDAS META - #${orderNumber}*\n`;
+    let message = `🛒 *PEDIDO SUPERTIENDA - #${orderNumber}*\n`;
     message += `📅 *Fecha:* ${dateStr}\n`;
     message += `📍 *Sede:* ${selectedBranch.name}\n\n`;
 

@@ -206,7 +206,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Buscar en Supertiendas Meta..."
+              placeholder="Buscar productos en SuperTienda..."
               className="w-full pl-9 pr-16 py-1.5 bg-white text-slate-900 placeholder:text-slate-400 text-xs font-medium rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-red-700 shadow-sm"
             />
             <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">

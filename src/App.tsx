@@ -544,14 +544,17 @@ export default function App() {
       </main>
 
       {/* 4. Footer Information & Reassurance */}
-      <footer className="mt-auto bg-[#0f2b48] text-slate-400 text-xs py-8 border-t border-slate-800">
+      <footer id="main-app-footer" className="mt-auto bg-[#0f2b48] text-slate-400 text-xs py-8 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 gap-6 text-center sm:text-left">
           <div>
             <span className="font-heading font-black text-white text-base tracking-wider block mb-2">
-              SUPERTIENDAS META
+              SUPERTIENDA
             </span>
-            <p className="text-[11px] text-slate-300 leading-relaxed max-w-xs">
-              Tu supermercado de confianza en Maracaibo y San Francisco. Calidad garantizada en víveres, charcutería y farmacia.
+            <p className="text-[11px] text-slate-300 leading-relaxed max-w-xs mb-2">
+              Catálogo digital interactivo con escáner de precios, conversión BCV en tiempo real y pedidos directos.
+            </p>
+            <p className="text-[10px] text-slate-400/80 leading-normal max-w-sm">
+              * Proyecto conceptual de demostración técnica y portafolio personal. No afiliado ni vinculado a marcas comerciales registradas.
             </p>
           </div>
 

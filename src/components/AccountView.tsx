@@ -485,7 +485,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
         <a
           id="btn-whatsapp-support"
-          href="https://wa.me/584246398347?text=Hola%20Supertiendas%20Meta,%20necesito%20asistencia%20con%20mi%20cuenta"
+          href="https://wa.me/584246398347?text=Hola%20SuperTienda,%20necesito%20asistencia%20con%20mi%20cuenta"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all shrink-0 cursor-pointer"
@@ -497,7 +497,7 @@ export const AccountView: React.FC<AccountViewProps> = ({
 
       {/* 5. Clean Footer */}
       <div className="pt-2 text-center text-[11px] text-slate-400">
-        <p>Supertiendas Meta C.A. • Tu supermercado de confianza en Maracaibo y San Francisco</p>
+        <p>SuperTienda • Catálogo digital y compras en línea</p>
       </div>
     </div>
   );
