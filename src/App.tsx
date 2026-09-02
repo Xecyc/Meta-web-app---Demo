@@ -612,19 +612,21 @@ export default function App() {
       />
 
       {/* 9. Mobile Camera Scanner Modal (Dual Barcode + OCR Engine) */}
-      <ScannerModal
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        products={products}
-        exchangeRate={exchangeRate}
-        onAddToCart={handleAddToCart}
-        onProductSelect={(prod) => setDetailProduct(prod)}
-        onSearchProduct={(q) => {
-          setSearchQuery(q);
-          setActiveTab('productos');
-        }}
-        branchName={selectedBranch.name}
-      />
+      {isScannerOpen && (
+        <ScannerModal
+          isOpen={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          products={products}
+          exchangeRate={exchangeRate}
+          onAddToCart={handleAddToCart}
+          onProductSelect={(prod) => setDetailProduct(prod)}
+          onSearchProduct={(q) => {
+            setSearchQuery(q);
+            setActiveTab('productos');
+          }}
+          branchName={selectedBranch.name}
+        />
+      )}
 
       {/* 10. BCV Currency Converter Bottom Sheet Modal */}
       <BcvCalculatorModal

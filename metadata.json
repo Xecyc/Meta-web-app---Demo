@@ -1,6 +1,6 @@
 {
   "name": "Supertiendas Meta - Catálogo y Pedidos",
   "description": "Catálogo digital y compras en línea para Supertiendas Meta con escáner de cámara dual (códigos de barras y OCR), conversión de moneda USD/Bsd en tiempo real y pedidos vía WhatsApp.",
-  "requestFramePermissions": ["camera"],
+  "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
